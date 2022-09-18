@@ -3,6 +3,7 @@
 
 #include <curses.h>
 #include <iconv.h>
+#include "context.h"
 
 /*
  * Macros
@@ -42,17 +43,19 @@ default:\
 /*
  * Constants
  */
-extern const int term_width;
-extern const int term_height;
-extern const int top_height;
-extern const int bottom_height;
+extern const int BANNER_HEIGHT;
+extern const int TITLE_HEIGHT;
+extern const int MAIN_HEIGHT;
+extern const int BOTTOM_HEIGHT;
 
 /*
  * Functions
  */
-int print_title(char *, const char *, const char *);
-int show_file(char *);
+char *trim_whitespaces(char *);
+int print_title(Context_t *, char *, const char *, const char *);
+int show_banner(Context_t *);
 int fkey_hints (
+	Context_t *,
 	const char *,
 	const char *,
 	const char *,

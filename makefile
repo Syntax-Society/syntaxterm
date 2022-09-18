@@ -1,14 +1,17 @@
 PKGS    := form ncurses tinfo
 CC      := gcc
-CFLAGS  := -g -Og -Wall -Wextra -std=c99 -no-pie $(shell pkg-config --cflags $(PKGS))
-LDFLAGS := $(shell pkg-config --libs $(PKGS))
+CFLAGS  := -g -Og -Wall -Wextra -std=c99 -no-pie $(shell pkg-config --cflags $(PKGS)) -I.
+LDFLAGS := $(shell pkg-config --libs $(PKGS)) -I.
 SQLFLAGS:= $(shell mariadb_config --include --libs)
 RM      := rm
 
 BIN     := $(notdir $(shell pwd))
-SRC     := $(wildcard *.c)
+SRC     := $(wildcard *.c */*.c)
 OBJ     := $(SRC:.c=.o)
 HEADERS := $(wildcard *.h)
+
+ROWS=$(shell stty -a | grep -oE 'rows [0-9]+')
+COLS=$(shell stty -a | grep -oE 'columns [0-9]+')
 
 SSH_HOST := syntax
 
@@ -19,7 +22,8 @@ SSH_PID := .ssh-tunnel.PID
 all: $(BIN)
 
 run: start-tunnel $(BIN)
-	./$(BIN)
+	stty rows 25 cols 80 && ./$(BIN)
+	stty sane $(ROWS) $(COLS)
 
 start-tunnel: .ssh-tunnel.PID
 
@@ -32,7 +36,7 @@ stop-tunnel:
 	sleep 1
 
 clean: stop-tunnel
-	$(RM) -f *.o $(BIN)
+	$(RM) -f $(OBJ) $(BIN)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $^ -o $@

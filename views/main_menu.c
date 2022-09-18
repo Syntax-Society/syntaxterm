@@ -1,8 +1,8 @@
 #include <curses.h>
 #include "common.h"
 #include "context.h"
-#include "main_menu.h"
-#include "checkin.h"
+#include "views/checkin.h"
+#include "views/main_menu.h"
 //#include "admin_menu.h"
 //#include "about.h"
 
@@ -10,10 +10,11 @@ int main_menu(Context_t *context) {
 	int running = 1;
 
 	while (running) {
-		print_title("Huvudmeny", NULL, NULL);
+		print_title(context, "Huvudmeny", NULL, NULL);
 
-		show_file("header.txt");
+		show_banner(context);
 		fkey_hints(
+			context,
 			"incheck",
 			"admin",
 			"",
@@ -24,7 +25,10 @@ int main_menu(Context_t *context) {
 			"avsluta"
 			);
 
-		int c = wgetch(stdscr);
+		wclear(context->main);
+		wrefresh(context->main);
+
+		int c = wgetch(context->bottom);
 		switch (c) {
 			case KEY_F(1):
 				checkin(context);

@@ -1,26 +1,31 @@
+#include <curses.h>
+#include <form.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <curses.h>
+#include <time.h>
+#include "common.h"
 #include "config.h"
 #include "context.h"
-#include "main_menu.h"
+#include "db.h"
+#include "views/main_menu.h"
 
 Context_t *context;
 
 static void finish(int sig) {
 	sig = sig;
-
 	endwin();
-
 	context_term(context);
 
+	printf("Exited gracefully!\n");
 	exit(0);
 }
 
 int main(void) {
-	context = context_init(
-		(Context_params_t) {
+	srand(time(NULL));
+
+	DB_t *db = DB_init(
+		(DB_params_t) {
 			config.mysql_host,
 			config.mysql_user,
 			config.mysql_passwd,
@@ -28,9 +33,8 @@ int main(void) {
 			config.mysql_port
 		}
 	);
-
-	if (context == NULL) {
-		fprintf(stderr, "Could not initialize context: %s\n", context_error());
+	if (db == NULL) {
+		fprintf(stderr, "Could not initialize database!\n");
 		return 1;
 	}
 
@@ -40,12 +44,14 @@ int main(void) {
 	noecho();
 	keypad(stdscr, TRUE);
 
-	for (int x = 0; x < 80; x++) {
-		mvaddch(24, x, '0' + x % 10);
+	context = context_init((Context_params_t) {
+	}, db);
+	if (context == NULL) {
+		fprintf(stderr, "Could not initialize context: %s\n", context_error());
+		return 2;
 	}
-	for (int y = 0; y < 24; y++) {
-		mvaddch(y, 80, '0' + y % 10);
-	}
+
+	set_form_win(NULL, context->main);
 	main_menu(context);
 
 	finish(0);
